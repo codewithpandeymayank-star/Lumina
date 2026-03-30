@@ -1,0 +1,10 @@
+data/
+__pycache__/
+*.zip
+*.pkl
+*.safetensors
+*.pt
+*.bin
+*.pth
+model/emotion_model/
+model/checkpoint-250/
