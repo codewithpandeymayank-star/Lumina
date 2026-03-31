@@ -8,3 +8,4 @@ __pycache__/
 *.pth
 model/emotion_model/
 model/checkpoint-250/
+model/upload.py
