@@ -4,3 +4,5 @@ transformers
 scikit-learn
 numpy
 pandas
+google-genai
+huggingface_hub
