@@ -2,7 +2,8 @@ import streamlit as st
 import torch
 from transformers import DistilBertTokenizerFast, DistilBertForSequenceClassification
 import pickle
-import random
+from google import genai
+from google.genai import types
 from huggingface_hub import hf_hub_download
 
 MODEL_REPO = "GabbarM32/emotion-chatbot-model"
@@ -18,113 +19,83 @@ def load_model():
     return tokenizer, model, le
 
 def predict_emotion(text, tokenizer, model, le):
-    chunks = [text[i:i+64] for i in range(0, len(text.split()), 64)]
-    all_logits = []
-    for chunk in [text]:
-        inputs = tokenizer(chunk, return_tensors='pt', truncation=True, padding=True, max_length=128)
-        with torch.no_grad():
-            outputs = model(**inputs)
-        all_logits.append(outputs.logits)
-    logits = torch.mean(torch.stack(all_logits), dim=0)
-    probs = torch.softmax(logits, dim=1)
+    inputs = tokenizer(text, return_tensors='pt', truncation=True, padding=True, max_length=128)
+    with torch.no_grad():
+        outputs = model(**inputs)
+    probs = torch.softmax(outputs.logits, dim=1)
     confidence = torch.max(probs).item()
-    pred = torch.argmax(logits, dim=1).item()
+    pred = torch.argmax(outputs.logits, dim=1).item()
     emotion = le.inverse_transform([pred])[0]
-    all_probs = {le.inverse_transform([i])[0]: round(probs[0][i].item() * 100, 1) 
-                 for i in range(len(le.classes_))}
     if confidence < 0.40:
         emotion = 'neutral'
-    return emotion, round(confidence * 100, 1), all_probs
+    return emotion, round(confidence * 100, 1)
 
-def get_smart_response(text, emotion, all_probs):
-    text_lower = text.lower()
-    words = text_lower.split()
+def get_gemini_response(messages, emotion, confidence, api_key):
+    try:
+        client = genai.Client(api_key=api_key)
+        prompt = f"""You are EmotiBot — a warm, empathetic AI companion.
+The user's detected emotion is: {emotion} (confidence: {confidence}%)
 
-    greetings = ['hi','hello','hey','sup','howdy','good morning','good evening','good afternoon','what\'s up','wassup']
-    if any(g in text_lower for g in greetings) and len(words) < 6:
-        return random.choice([
-            "Hey there! 👋 How are you feeling today? I'm here to listen.",
-            "Hello! Great to have you here. What's on your mind today?",
-            "Hi! I'm your emotion-aware companion. How's your day going?",
-        ])
+Rules:
+- Talk like a caring friend, not a robot
+- Remember the full conversation and refer back naturally
+- Ask thoughtful follow-up questions
+- Validate feelings before giving advice
+- Keep responses 2-4 sentences
+- Use emojis occasionally
+- Never say "As an AI"
 
-    bot_questions = ['who are you','what are you','what can you do','are you a bot','are you real','are you human','what is your name','your name']
-    if any(q in text_lower for q in bot_questions):
-        return random.choice([
-            "I'm an emotion-aware AI chatbot! 🤖 I'm trained on thousands of real conversations to understand how you feel — whether you're happy, sad, angry, scared, or anything in between. Just talk to me naturally!",
-            "I'm your empathetic AI companion, powered by DistilBERT with 91.8% emotion detection accuracy! I can understand complex emotions in your messages and respond with genuine empathy. What's on your mind?",
-        ])
+Conversation so far:
+"""
+        for msg in messages[:-1]:
+            role = "User" if msg['role'] == 'user' else "EmotiBot"
+            prompt += f"{role}: {msg['content']}\n"
 
-    negative_words = ['not good','not well','not okay','not fine','not great','dont feel','don\'t feel','feeling bad','feeling terrible','feeling awful','nothing is','everything is wrong','nothing works','cant do','can\'t do','no one','nobody','nothing']
-    if any(n in text_lower for n in negative_words):
-        return random.choice([
-            "I can sense that things aren't going well for you right now. 💙 Sometimes life just feels heavy and overwhelming. You don't have to pretend everything is okay — I'm here to listen without any judgment. What's been going on?",
-            "It sounds like you're going through a really tough time. 😔 Those feelings are completely valid. Sometimes just putting it into words can help. Would you like to talk about what's been bothering you?",
-            "I hear you — and I want you to know that it's okay to not be okay. 💜 Whatever you're going through right now, you don't have to face it alone. Tell me more about what's happening.",
-        ])
+        prompt += f"\nUser: {messages[-1]['content']}\nEmotiBot:"
 
-    overwhelm_words = ['too much','overwhelmed','stressed','pressure','burden','exhausted','tired of','fed up','cant take','can\'t take','falling apart','breaking down','losing it','going crazy','so hard','very hard','really hard']
-    if any(o in text_lower for o in overwhelm_words):
-        return random.choice([
-            "It sounds like you're carrying a really heavy load right now. 😔 When everything piles up at once, it can feel completely overwhelming. Take a deep breath — you're stronger than you think. What's been weighing on you the most?",
-            "I can feel the exhaustion in your words. 💙 It's okay to feel this way — you've been dealing with a lot. Sometimes we just need someone to acknowledge how hard things are. I'm here. What's going on?",
-        ])
+        response = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                thinking_config=types.ThinkingConfig(thinking_budget=0),
+                max_output_tokens=300,
+                temperature=0.8,
+            )
+        )
+        if response.text and response.text.strip():
+            return response.text
+        return "I'm here for you. Could you tell me a bit more? 💙"
+    except Exception as e:
+        return f"Error: {str(e)}"
 
-    complex_sad = ['nobody understands','no one cares','all alone','completely alone','feel empty','feel hollow','feel numb','lost everything','given up','no point','what\'s the point','don\'t see the point']
-    if any(c in text_lower for c in complex_sad):
-        return random.choice([
-            "What you're feeling sounds really painful, and I want you to know — I hear you. 💙 Feeling alone and misunderstood is one of the hardest things a person can experience. You matter, and your feelings matter. Please know you're not as alone as you feel right now.",
-            "I'm really glad you shared that with me. 💜 Feeling like no one understands can be incredibly isolating. But reaching out — even to a chatbot — shows courage. I'm here, and I'm listening to every word.",
-        ])
+st.set_page_config(page_title="EmotiBot", page_icon="💬", layout="centered")
 
-    RESPONSES = {
-        'joy': [
-            "That's absolutely wonderful to hear! 😊 Happiness like yours is truly contagious. What's been going so well for you? I'd love to hear all about it!",
-            "Yay! It sounds like things are really going your way right now! 🌟 Moments like these are so precious — what's been making you feel so good?",
-            "That's so amazing! 🎉 You deserve all the happiness in the world. Tell me more about what's been making you smile!",
-            "I love hearing this! 😄 Your positive energy is wonderful. What's the highlight of your day been so far?",
-        ],
-        'sadness': [
-            "I'm really sorry you're going through this. 💙 It takes courage to open up about how you're feeling, and I want you to know that I'm here for you. You don't have to go through this alone — would you like to talk about what's been happening?",
-            "That sounds really painful, and your feelings are completely valid. 😢 Sometimes life can feel so heavy and overwhelming. I'm here to listen without any judgment — take your time and share as much or as little as you'd like.",
-            "I hear the sadness in your words, and I want you to know that it's okay to feel this way. 💜 Emotions like these remind us that we deeply care about things. What's been weighing on your heart lately?",
-            "You don't have to carry this alone. 🤗 Whatever you're going through, sharing it can sometimes make the burden a little lighter. I'm right here — what's been on your mind?",
-        ],
-        'anger': [
-            "I can completely understand why you're feeling this way — that sounds genuinely frustrating. 😤 It's okay to feel angry, especially when things feel unfair or out of control. Would you like to talk through what happened?",
-            "Your anger makes total sense given what you've described. 💢 Sometimes the world can be genuinely infuriating. Take a deep breath — I'm here to listen, and I won't dismiss what you're feeling.",
-            "That sounds really difficult to deal with. 😠 Anger often comes from feeling unheard or disrespected, and those feelings are completely valid. What's been going on that's gotten you so frustrated?",
-        ],
-        'fear': [
-            "I can hear that you're feeling really anxious right now, and I want you to know that's completely understandable. 💜 Fear is a sign that something matters deeply to you. Take a slow, deep breath — you're not alone in this. What's been worrying you?",
-            "Feeling scared or anxious can be so overwhelming, especially when we can't see a clear way forward. 😨 But you've faced difficult things before, and you have more strength than you realize. Would you like to talk through what's frightening you?",
-            "It's okay to feel afraid — everyone does sometimes. 🤝 What matters is that you reached out instead of keeping it bottled up. I'm here with you. What's been making you feel this way?",
-        ],
-        'surprise': [
-            "Wow, that sounds like quite a turn of events! 😲 Life really can catch us off guard sometimes. Was this a good surprise or a not-so-great one? Tell me everything!",
-            "Oh! That must have really caught you off guard! 🤩 Unexpected things can be both exciting and unsettling at the same time. How are you feeling about it all?",
-            "That's quite something! 😮 Sometimes life throws us the most unexpected curveballs. Are you doing okay with everything that's happened?",
-        ],
-        'love': [
-            "That's absolutely beautiful to hear! ❤️ Love and deep connection are some of the most powerful feelings we can experience. Tell me more — who or what has your heart feeling so full?",
-            "Aww, that's so heartwarming! 🥰 There's nothing quite like that warm feeling of love and connection. What's been filling your heart with such good feelings?",
-            "That's really lovely! 💕 Caring deeply about someone or something makes life so much richer. I'd love to hear more about what's making you feel this way!",
-        ],
-        'neutral': [
-            "Thanks for sharing that with me! 😊 I'm here and listening — feel free to tell me more about what's been on your mind lately.",
-            "That's interesting! I'd love to understand more about what you mean. Could you tell me a bit more about how you're feeling or what's been going on?",
-            "I'm here for you! 🙂 Sometimes it's hard to put feelings into words, and that's completely okay. Take your time — what would you like to talk about?",
-        ],
-    }
+st.markdown("""
+<style>
+    .stApp { background: linear-gradient(135deg, #0a1628 0%, #0d2144 50%, #0a1628 100%); }
+    .main-title { font-size: 2.5rem; font-weight: 700; color: #4da6ff; letter-spacing: 1px; text-align: center; padding-top: 20px; }
+    .main-subtitle { font-size: 0.95rem; color: #7ab3e0; text-align: center; margin-bottom: 10px; }
+    .status-bar { display: flex; justify-content: center; gap: 12px; margin: 10px 0 20px 0; flex-wrap: wrap; }
+    .status-item { background: rgba(77,166,255,0.1); border: 1px solid rgba(77,166,255,0.3); border-radius: 20px; padding: 4px 14px; font-size: 12px; color: #4da6ff; }
+    .emotion-badge { display: inline-block; padding: 4px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; margin-top: 6px; }
+    [data-testid="stChatMessageContent"] { background: rgba(13,33,68,0.8) !important; border: 1px solid rgba(77,166,255,0.2) !important; border-radius: 16px !important; color: #e8f0fe !important; }
+    div[data-testid="stSidebar"] { background: rgba(10,22,40,0.95) !important; border-right: 1px solid rgba(77,166,255,0.2) !important; }
+    .sidebar-title { color: #4da6ff; font-size: 1.1rem; font-weight: 600; }
+</style>
+""", unsafe_allow_html=True)
 
-    replies = RESPONSES.get(emotion, RESPONSES['neutral'])
-    return random.choice(replies)
+st.markdown('<div class="main-title">💬 Emotion-Aware Chatbot</div>', unsafe_allow_html=True)
+st.markdown('<div class="main-subtitle">Your emotion-aware AI companion — powered by Google Gemini</div>', unsafe_allow_html=True)
+st.markdown("""
+<div class="status-bar">
+    <span class="status-item">🟢 Online</span>
+    <span class="status-item">🧠 Gemini AI</span>
+    <span class="status-item">⚡ 91.8% Accuracy</span>
+    <span class="status-item">💙 6 Emotions</span>
+</div>
+""", unsafe_allow_html=True)
 
-st.set_page_config(page_title="Emotion-Aware Chatbot", page_icon="🤖", layout="centered")
-st.title("🤖 Emotion-Aware Chatbot")
-st.caption("Powered by DistilBERT • 91.8% accuracy • Understands complex emotions")
-
-with st.spinner("Loading AI model... please wait ⏳"):
+with st.spinner("🔄 Loading emotion model..."):
     tokenizer, model, le = load_model()
 
 if 'messages' not in st.session_state:
@@ -134,8 +105,54 @@ if 'emotions' not in st.session_state:
 if 'confidences' not in st.session_state:
     st.session_state.confidences = []
 
-COLORS = {'joy':'#FAC775','sadness':'#85B7EB','anger':'#F0997B','fear':'#AFA9EC','surprise':'#9FE1CB','love':'#F4C0D1','neutral':'#D3D1C7'}
-EMOJIS = {'joy':'😊','sadness':'😢','anger':'😠','fear':'😨','surprise':'😲','love':'❤️','neutral':'💬'}
+COLORS = {
+    'joy':      ('background:#FAC775;color:#633806', '😊'),
+    'sadness':  ('background:#1a4a7a;color:#85B7EB', '😢'),
+    'anger':    ('background:#7a2a1a;color:#F0997B', '😠'),
+    'fear':     ('background:#2a1a7a;color:#AFA9EC', '😨'),
+    'surprise': ('background:#1a7a5a;color:#9FE1CB', '😲'),
+    'love':     ('background:#7a1a4a;color:#F4C0D1', '❤️'),
+    'neutral':  ('background:#2a2a2a;color:#D3D1C7', '💬'),
+}
+
+with st.sidebar:
+    st.markdown("<p class='sidebar-title'>⚙️ Settings</p>", unsafe_allow_html=True)
+    try:
+        api_key = st.secrets["GEMINI_API_KEY"]
+        st.success("✅ API Connected")
+    except:
+        api_key = st.text_input("🔑 Gemini API Key", type="password", placeholder="AIzaSy...")
+        st.caption("Get free key at aistudio.google.com")
+    st.divider()
+    st.markdown("<p class='sidebar-title'>📊 Insights</p>", unsafe_allow_html=True)
+    if st.session_state.emotions:
+        total = len(st.session_state.emotions)
+        st.markdown(f"**Total messages:** {total}")
+        emotion_counts = {}
+        for emo in st.session_state.emotions:
+            emotion_counts[emo] = emotion_counts.get(emo, 0) + 1
+        dominant = max(emotion_counts, key=emotion_counts.get)
+        style, emoji = COLORS.get(dominant, COLORS['neutral'])
+        st.markdown(f"**Dominant:**")
+        st.markdown(f"<span class='emotion-badge' style='{style}'>{emoji} {dominant.capitalize()}</span>", unsafe_allow_html=True)
+        st.write("")
+        st.divider()
+        for emo, count in sorted(emotion_counts.items(), key=lambda x: x[1], reverse=True):
+            pct = round(count/total*100)
+            style, emoji = COLORS.get(emo, COLORS['neutral'])
+            st.markdown(f"<span class='emotion-badge' style='{style}'>{emoji} {emo.capitalize()}: {count} ({pct}%)</span>", unsafe_allow_html=True)
+            st.write("")
+        st.divider()
+        avg_conf = round(sum(st.session_state.confidences)/len(st.session_state.confidences), 1)
+        st.markdown(f"**Avg confidence:** {avg_conf}%")
+    else:
+        st.info("💬 Start chatting to see insights!")
+    st.divider()
+    if st.button("🗑️ New Conversation", use_container_width=True):
+        st.session_state.messages = []
+        st.session_state.emotions = []
+        st.session_state.confidences = []
+        st.rerun()
 
 for i, msg in enumerate(st.session_state.messages):
     with st.chat_message(msg['role']):
@@ -145,40 +162,28 @@ for i, msg in enumerate(st.session_state.messages):
             if idx < len(st.session_state.emotions):
                 emo = st.session_state.emotions[idx]
                 conf = st.session_state.confidences[idx]
-                st.markdown(f"<span style='background:{COLORS.get(emo,'#D3D1C7')};padding:3px 12px;border-radius:20px;font-size:12px;font-weight:500'>{EMOJIS.get(emo,'💬')} {emo.capitalize()} detected • {conf}% confidence</span>", unsafe_allow_html=True)
+                style, emoji = COLORS.get(emo, COLORS['neutral'])
+                st.markdown(f"<span class='emotion-badge' style='{style}'>{emoji} {emo.capitalize()} • {conf}%</span>", unsafe_allow_html=True)
 
-if prompt := st.chat_input("Share anything — how you feel, what happened today, or just say hi!"):
+if prompt := st.chat_input("Talk to me — share anything on your mind..."):
     with st.chat_message('user'):
         st.write(prompt)
-    emotion, confidence, all_probs = predict_emotion(prompt, tokenizer, model, le)
+    emotion, confidence = predict_emotion(prompt, tokenizer, model, le)
     st.session_state.emotions.append(emotion)
     st.session_state.confidences.append(confidence)
-    st.markdown(f"<span style='background:{COLORS.get(emotion,'#D3D1C7')};padding:3px 12px;border-radius:20px;font-size:12px;font-weight:500'>{EMOJIS.get(emotion,'💬')} {emotion.capitalize()} detected • {confidence}% confidence</span>", unsafe_allow_html=True)
-    reply = get_smart_response(prompt, emotion, all_probs)
-    with st.chat_message('assistant'):
-        st.write(reply)
-    st.session_state.messages.append({'role':'user','content':prompt})
-    st.session_state.messages.append({'role':'assistant','content':reply})
-    st.rerun()
-
-with st.sidebar:
-    st.header("📊 Emotion History")
-    if st.session_state.emotions:
-        emotion_counts = {}
-        for emo in st.session_state.emotions:
-            emotion_counts[emo] = emotion_counts.get(emo, 0) + 1
-        st.subheader("Summary")
-        for emo, count in emotion_counts.items():
-            st.write(f"{EMOJIS.get(emo,'💬')} {emo.capitalize()}: {count} message(s)")
-        st.divider()
-        st.subheader("Message Log")
-        for i, (emo, conf) in enumerate(zip(st.session_state.emotions, st.session_state.confidences)):
-            st.write(f"**#{i+1}** {EMOJIS.get(emo,'💬')} {emo.capitalize()} ({conf}%)")
+    style, emoji = COLORS.get(emotion, COLORS['neutral'])
+    st.markdown(f"<span class='emotion-badge' style='{style}'>{emoji} {emotion.capitalize()} • {confidence}%</span>", unsafe_allow_html=True)
+    st.session_state.messages.append({'role': 'user', 'content': prompt})
+    if api_key and api_key.startswith('AIza'):
+        with st.chat_message('assistant'):
+            with st.spinner("thinking... 💭"):
+                reply = get_gemini_response(
+                    st.session_state.messages,
+                    emotion, confidence, api_key
+                )
+                st.write(reply)
+                st.session_state.messages.append({'role': 'assistant', 'content': reply})
     else:
-        st.info("Start chatting to see your emotion history here!")
-    st.divider()
-    if st.button("🗑️ Clear Chat", use_container_width=True):
-        st.session_state.messages = []
-        st.session_state.emotions = []
-        st.session_state.confidences = []
-        st.rerun()
+        with st.chat_message('assistant'):
+            st.warning("⚠️ Please enter your Gemini API key in the sidebar!")
+    st.rerun()
