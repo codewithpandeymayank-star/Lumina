@@ -58,7 +58,7 @@ Conversation so far:
             contents=prompt,
             config=types.GenerateContentConfig(
                 thinking_config=types.ThinkingConfig(thinking_budget=0),
-                max_output_tokens=300,
+                max_output_tokens=150,
                 temperature=0.8,
             )
         )
