@@ -120,8 +120,8 @@ st.markdown("""
     <div class="status-bar">
         <span class="status-pill active">● Live</span>
         <span class="status-pill">Gemini 2.5 Flash</span>
-        <span class="status-pill">91.8% Accuracy</span>
-        <span class="status-pill">6 Emotions</span>
+        <span class="status-pill">92.4% Accuracy</span>
+        <span class="status-pill">8 Emotions</span>
         <span class="status-pill">Crisis Detection</span>
         <span class="status-pill">PDF Export</span>
     </div>
@@ -150,6 +150,7 @@ COLORS = {
     'surprise': ('background:#064e3b;color:#6ee7b7', '😲'),
     'love':     ('background:#831843;color:#f9a8d4', '❤️'),
     'neutral':  ('background:#1f2937;color:#9ca3af', '💬'),
+    'disgust':  ('background:#1a3a1a;color:#86efac', '🤢'),
 }
 
 with st.sidebar:
