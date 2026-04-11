@@ -76,7 +76,7 @@ st.markdown("""
         50% { opacity: 0.5; transform: scale(0.7); }
     }
     .nav-links { display: flex; gap: 36px; }
-    .nav-link { font-size: 0.85rem; color: #8899aa; font-weight: 400; letter-spacing: 0.2px; }
+    .nav-link { font-size: 0.85rem; color: #a0aec0; font-weight: 400; letter-spacing: 0.2px; }
 
     /* ── Hero ── */
     .hero {
@@ -111,7 +111,7 @@ st.markdown("""
     }
 
     .hero-p {
-        font-size: 1.05rem; color: #8899aa; line-height: 1.85;
+        font-size: 1.05rem; color: #a0aec0; line-height: 1.85;
         max-width: 480px; margin: 0 auto 52px; font-weight: 300;
     }
 
