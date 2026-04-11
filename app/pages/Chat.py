@@ -44,6 +44,14 @@ def predict_emotion(text, tokenizer, model, le):
     emotion = le.inverse_transform([pred])[0]
     if confidence < 0.55:
         emotion = 'neutral'
+    # Negation override
+    negation_words = ['not good', 'not ok', 'not fine', 'not well', 'not great',
+                      'actually not', 'but not', 'dont feel good', 'do not feel good',
+                      'not feeling good', 'not feeling well', 'not happy', 'not okay']
+    text_lower = text.lower()
+    if any(neg in text_lower for neg in negation_words):
+        if emotion in ["joy", "love", "surprise"]:
+            emotion = "sadness"
     return emotion, round(confidence * 100, 1)
 
 def get_gemini_response(messages, emotion, confidence, api_key):
@@ -86,6 +94,8 @@ Conversation so far:
         placeholder.markdown(full_reply)
         return full_reply
     except Exception as e:
+        if '429' in str(e) or 'EXHAUSTED' in str(e):
+            return 'Daily AI limit reached. Please try again tomorrow or upgrade your API plan. 🙏'
         if '503' in str(e) or 'UNAVAILABLE' in str(e):
             return "Gemini is busy right now, please send your message again in a moment. 🙏"
         return f"Error: {str(e)}"
