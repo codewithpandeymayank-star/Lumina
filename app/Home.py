@@ -22,7 +22,7 @@ st.markdown("""
     div[data-testid="stSidebar"] { display: none !important; }
     #MainMenu, header, footer { visibility: hidden; }
     .block-container { padding: 0 !important; max-width: 100% !important; }
-    .stButton > button { all: unset; cursor: pointer; background: linear-gradient(135deg, #0ea5e9, #6366f1) !important; color: white !important; padding: 16px 48px !important; border-radius: 14px !important; font-size: 1.1rem !important; font-weight: 700 !important; box-shadow: 0 0 40px rgba(14,165,233,0.5) !important; display: block !important; width: 100% !important; text-align: center !important; }
+    .stButton > button { all: unset; cursor: pointer; }
 
     /* ── Canvas ── */
     .canvas {
@@ -277,9 +277,9 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 col1, col2, col3 = st.columns([1.6, 1.2, 1.6])
-pass
+with col2:
     if st.button("✦  Start Chatting — It's Free", use_container_width=True, type="primary"):
-pass
+        st.switch_page("pages/Chat.py")
 
 st.markdown("""
 <!-- Stats -->
@@ -386,30 +386,4 @@ st.markdown("""
     <div class="footer-copy">© 2026 Lumina</div>
 </div>
 <div class="disc">⚠ Lumina is not a substitute for professional mental health care. In crisis, please contact a qualified professional.</div>
-""", unsafe_allow_html=True)
-st.markdown("""
-<style>
-div.stButton > button:first-child {
-    background: linear-gradient(135deg, #0ea5e9, #6366f1) !important;
-    color: white !important;
-    padding: 18px 60px !important;
-    border-radius: 14px !important;
-    font-size: 1.15rem !important;
-    font-weight: 700 !important;
-    border: none !important;
-    box-shadow: 0 0 40px rgba(14,165,233,0.4) !important;
-    width: 100% !important;
-    transition: all 0.3s !important;
-}
-div.stButton > button:hover {
-    background: linear-gradient(135deg, #38bdf8, #818cf8) !important;
-    box-shadow: 0 0 60px rgba(14,165,233,0.6) !important;
-    transform: translateY(-2px) !important;
-}
-</style>
-""", unsafe_allow_html=True)
-st.markdown("""
-<div style="text-align:center; margin: 40px 0 20px 0">
-    <a href="/Chat" target="_self" style="display:inline-block;background:linear-gradient(135deg,#0ea5e9,#6366f1);color:white;padding:20px 64px;border-radius:16px;font-family:'Sora',sans-serif;font-size:1.15rem;font-weight:700;text-decoration:none;box-shadow:0 0 50px rgba(14,165,233,0.4)">✦ Start Chatting — It's Free</a>
-</div>
 """, unsafe_allow_html=True)
