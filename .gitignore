@@ -9,3 +9,4 @@ __pycache__/
 model/emotion_model/
 model/checkpoint-250/
 model/upload.py
+.streamlit/secrets.toml
