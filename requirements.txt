@@ -6,3 +6,4 @@ numpy
 pandas
 google-genai
 huggingface_hub
+groq>=0.4.0
