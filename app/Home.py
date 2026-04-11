@@ -408,3 +408,8 @@ div.stButton > button:hover {
 }
 </style>
 """, unsafe_allow_html=True)
+st.markdown("""
+<div style="text-align:center; margin: 40px 0 20px 0">
+    <a href="/Chat" target="_self" style="display:inline-block;background:linear-gradient(135deg,#0ea5e9,#6366f1);color:white;padding:20px 64px;border-radius:16px;font-family:'Sora',sans-serif;font-size:1.15rem;font-weight:700;text-decoration:none;box-shadow:0 0 50px rgba(14,165,233,0.4)">✦ Start Chatting — It's Free</a>
+</div>
+""", unsafe_allow_html=True)
