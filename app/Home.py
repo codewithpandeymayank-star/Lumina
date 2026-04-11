@@ -277,9 +277,9 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 col1, col2, col3 = st.columns([1.6, 1.2, 1.6])
-with col2:
+pass
     if st.button("✦  Start Chatting — It's Free", use_container_width=True, type="primary"):
-        st.switch_page("pages/Chat.py")
+pass
 
 st.markdown("""
 <!-- Stats -->
