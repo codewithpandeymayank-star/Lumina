@@ -2,533 +2,363 @@ import streamlit as st
 
 st.set_page_config(
     page_title="Lumina — AI Mental Health Companion",
-    page_icon="🧠",
+    page_icon="🌙",
     layout="wide"
 )
 
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
-    
-    * { font-family: 'Inter', sans-serif; margin: 0; padding: 0; box-sizing: border-box; }
-    
-    .stApp {
-        background: #050508;
+    @import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap');
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body, .stApp {
+        font-family: 'DM Sans', sans-serif;
+        background: #080b12;
+        color: #c8d0e0;
         overflow-x: hidden;
     }
-    
+
     div[data-testid="stSidebar"] { display: none !important; }
-    #MainMenu { visibility: hidden; }
-    header { visibility: hidden; }
-    footer { visibility: hidden; }
+    #MainMenu, header, footer { visibility: hidden; }
     .block-container { padding: 0 !important; max-width: 100% !important; }
+    .stButton > button { all: unset; cursor: pointer; }
 
-    .page-wrap {
-        max-width: 1100px;
-        margin: 0 auto;
-        padding: 0 24px;
-        position: relative;
+    /* ── Canvas ── */
+    .canvas {
+        position: fixed; inset: 0; z-index: 0; pointer-events: none;
+        overflow: hidden;
     }
+    .orb {
+        position: absolute; border-radius: 50%;
+        filter: blur(80px); opacity: 0.18;
+        animation: drift 18s ease-in-out infinite alternate;
+    }
+    .orb-1 { width: 700px; height: 700px; background: radial-gradient(circle, #0ea5e9, transparent 70%); top: -200px; left: -200px; animation-duration: 22s; }
+    .orb-2 { width: 500px; height: 500px; background: radial-gradient(circle, #6366f1, transparent 70%); bottom: -150px; right: -100px; animation-duration: 18s; animation-delay: -9s; }
+    .orb-3 { width: 400px; height: 400px; background: radial-gradient(circle, #14b8a6, transparent 70%); top: 40%; left: 40%; animation-duration: 26s; animation-delay: -13s; opacity: 0.1; }
+    @keyframes drift { 0% { transform: translate(0,0) scale(1); } 100% { transform: translate(60px,40px) scale(1.1); } }
 
-    /* Background orbs */
-    .bg-orb-1 {
-        position: fixed;
-        top: -200px;
-        left: -200px;
-        width: 600px;
-        height: 600px;
-        background: radial-gradient(circle, rgba(99,102,241,0.15) 0%, transparent 70%);
-        pointer-events: none;
-        z-index: 0;
-    }
-    .bg-orb-2 {
-        position: fixed;
-        bottom: -200px;
-        right: -200px;
-        width: 600px;
-        height: 600px;
-        background: radial-gradient(circle, rgba(236,72,153,0.1) 0%, transparent 70%);
-        pointer-events: none;
-        z-index: 0;
-    }
-    .bg-orb-3 {
-        position: fixed;
-        top: 40%;
-        left: 50%;
-        width: 400px;
-        height: 400px;
-        background: radial-gradient(circle, rgba(139,92,246,0.08) 0%, transparent 70%);
-        pointer-events: none;
-        z-index: 0;
+    /* Grain overlay */
+    .canvas::after {
+        content: '';
+        position: fixed; inset: 0;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+        opacity: 0.4; pointer-events: none;
     }
 
-    /* Nav */
+    /* ── Layout ── */
+    .page { position: relative; z-index: 1; max-width: 1120px; margin: 0 auto; padding: 0 32px; }
+
+    /* ── Nav ── */
     .nav {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 20px 48px;
-        border-bottom: 1px solid rgba(255,255,255,0.06);
-        backdrop-filter: blur(10px);
-        position: sticky;
-        top: 0;
-        z-index: 100;
-        background: rgba(5,5,8,0.8);
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 24px 48px;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+        background: rgba(8,11,18,0.7);
+        backdrop-filter: blur(16px);
+        position: sticky; top: 0; z-index: 100;
     }
-    .nav-logo {
-        font-size: 1.2rem;
-        font-weight: 700;
-        color: #ffffff;
-        display: flex;
-        align-items: center;
-        gap: 8px;
+    .nav-brand {
+        font-family: 'Sora', sans-serif;
+        font-weight: 700; font-size: 1.15rem;
+        color: #fff; letter-spacing: -0.3px;
+        display: flex; align-items: center; gap: 10px;
     }
-    .nav-links {
-        display: flex;
-        gap: 32px;
-        align-items: center;
+    .nav-dot {
+        width: 8px; height: 8px; border-radius: 50%;
+        background: #0ea5e9;
+        box-shadow: 0 0 10px #0ea5e9;
+        animation: pulse-dot 2.5s ease-in-out infinite;
     }
-    .nav-link {
-        color: #6b7280;
-        font-size: 0.9rem;
-        text-decoration: none;
-        font-weight: 500;
+    @keyframes pulse-dot {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.5; transform: scale(0.7); }
     }
+    .nav-links { display: flex; gap: 36px; }
+    .nav-link { font-size: 0.85rem; color: #4b5a6e; font-weight: 400; letter-spacing: 0.2px; }
 
-    /* Hero */
+    /* ── Hero ── */
     .hero {
         text-align: center;
-        padding: 100px 24px 80px 24px;
-        position: relative;
-        z-index: 1;
+        padding: 120px 24px 96px;
+        animation: fadeUp 0.9s ease both;
     }
-    .badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        background: rgba(99,102,241,0.1);
-        border: 1px solid rgba(99,102,241,0.3);
-        color: #a5b4fc;
-        padding: 6px 16px;
-        border-radius: 100px;
-        font-size: 12px;
-        font-weight: 600;
-        letter-spacing: 0.5px;
-        text-transform: uppercase;
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+
+    .eyebrow {
+        display: inline-flex; align-items: center; gap: 8px;
+        background: rgba(14,165,233,0.08);
+        border: 1px solid rgba(14,165,233,0.2);
+        color: #38bdf8; padding: 6px 18px;
+        border-radius: 100px; font-size: 11px;
+        font-weight: 600; letter-spacing: 1.5px;
+        text-transform: uppercase; margin-bottom: 36px;
+    }
+    .eyebrow-dot { width: 5px; height: 5px; border-radius: 50%; background: #38bdf8; animation: pulse-dot 2s infinite; }
+
+    .hero-h1 {
+        font-family: 'Sora', sans-serif;
+        font-size: clamp(2.8rem, 6vw, 5rem);
+        font-weight: 800; color: #f0f4ff;
+        line-height: 1.08; letter-spacing: -2.5px;
         margin-bottom: 28px;
     }
-    .hero-title {
-        font-size: 4rem;
-        font-weight: 900;
-        color: #ffffff;
-        line-height: 1.1;
-        margin-bottom: 24px;
-        letter-spacing: -2px;
-    }
-    .hero-title .grad {
-        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+    .hero-h1 .accent {
+        background: linear-gradient(120deg, #38bdf8 10%, #818cf8 50%, #a78bfa 90%);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
         background-clip: text;
     }
-    .hero-sub {
-        font-size: 1.1rem;
-        color: #6b7280;
-        max-width: 520px;
-        margin: 0 auto 48px auto;
-        line-height: 1.8;
-        font-weight: 400;
-    }
-    .hero-buttons {
-        display: flex;
-        gap: 12px;
-        justify-content: center;
-        align-items: center;
-        margin-bottom: 80px;
-    }
-    .btn-primary {
-        background: linear-gradient(135deg, #6366f1, #8b5cf6);
-        color: white;
-        padding: 14px 32px;
-        border-radius: 12px;
-        font-size: 0.95rem;
-        font-weight: 600;
-        border: none;
-        cursor: pointer;
-        box-shadow: 0 0 30px rgba(99,102,241,0.4);
-    }
-    .btn-secondary {
-        background: rgba(255,255,255,0.05);
-        color: #9ca3af;
-        padding: 14px 32px;
-        border-radius: 12px;
-        font-size: 0.95rem;
-        font-weight: 600;
-        border: 1px solid rgba(255,255,255,0.1);
-        cursor: pointer;
+
+    .hero-p {
+        font-size: 1.05rem; color: #4b5a6e; line-height: 1.85;
+        max-width: 480px; margin: 0 auto 52px; font-weight: 300;
     }
 
-    /* Stats */
+    /* ── CTA button ── */
+    .cta-wrap { display: flex; gap: 14px; justify-content: center; align-items: center; margin-bottom: 96px; }
+
+    .btn-cta {
+        display: inline-flex; align-items: center; gap: 8px;
+        background: linear-gradient(135deg, #0ea5e9, #6366f1);
+        color: #fff; padding: 15px 36px;
+        border-radius: 14px; font-family: 'Sora', sans-serif;
+        font-weight: 600; font-size: 0.92rem;
+        box-shadow: 0 0 40px rgba(14,165,233,0.3), 0 4px 16px rgba(0,0,0,0.4);
+        transition: transform 0.2s, box-shadow 0.2s;
+        text-decoration: none; letter-spacing: -0.2px;
+    }
+    .btn-cta:hover { transform: translateY(-2px); box-shadow: 0 0 60px rgba(14,165,233,0.5), 0 8px 24px rgba(0,0,0,0.5); }
+
+    .btn-ghost {
+        display: inline-flex; align-items: center; gap: 8px;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.09);
+        color: #6b7a8d; padding: 15px 28px;
+        border-radius: 14px; font-size: 0.88rem; font-weight: 500;
+        transition: all 0.2s; text-decoration: none;
+    }
+    .btn-ghost:hover { background: rgba(255,255,255,0.07); color: #9ca3af; }
+
+    /* ── Stats ── */
     .stats {
-        display: flex;
-        justify-content: center;
-        gap: 0;
-        border: 1px solid rgba(255,255,255,0.06);
-        border-radius: 20px;
+        display: grid; grid-template-columns: repeat(4, 1fr);
+        max-width: 760px; margin: 0 auto 110px;
+        border: 1px solid rgba(255,255,255,0.05);
+        border-radius: 22px;
         background: rgba(255,255,255,0.02);
-        backdrop-filter: blur(10px);
+        backdrop-filter: blur(12px);
         overflow: hidden;
-        max-width: 700px;
-        margin: 0 auto 100px auto;
     }
-    .stat {
-        flex: 1;
-        padding: 28px 20px;
-        text-align: center;
-        border-right: 1px solid rgba(255,255,255,0.06);
-    }
+    .stat { padding: 32px 20px; text-align: center; border-right: 1px solid rgba(255,255,255,0.05); }
     .stat:last-child { border-right: none; }
-    .stat-num {
-        font-size: 1.8rem;
-        font-weight: 800;
-        color: #ffffff;
-        background: linear-gradient(135deg, #6366f1, #ec4899);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+    .stat-n {
+        font-family: 'Sora', sans-serif;
+        font-size: 2rem; font-weight: 800;
+        background: linear-gradient(120deg, #38bdf8, #818cf8);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        background-clip: text; letter-spacing: -1px;
     }
-    .stat-lbl {
-        font-size: 0.78rem;
-        color: #4b5563;
-        margin-top: 4px;
-        font-weight: 500;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
+    .stat-l { font-size: 0.72rem; color: #2d3748; margin-top: 5px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.8px; }
 
-    /* Section */
-    .section {
-        padding: 80px 24px;
-        position: relative;
-        z-index: 1;
-    }
-    .section-label {
-        text-align: center;
-        font-size: 11px;
-        font-weight: 700;
-        color: #6366f1;
-        text-transform: uppercase;
-        letter-spacing: 2px;
-        margin-bottom: 12px;
-    }
-    .section-title {
-        text-align: center;
-        font-size: 2.2rem;
-        font-weight: 800;
-        color: #ffffff;
-        letter-spacing: -1px;
-        margin-bottom: 12px;
-    }
-    .section-sub {
-        text-align: center;
-        color: #6b7280;
-        font-size: 1rem;
-        margin-bottom: 56px;
-        max-width: 500px;
-        margin-left: auto;
-        margin-right: auto;
-    }
+    /* ── Section ── */
+    .section { padding: 90px 0; }
+    .sec-tag { text-align: center; font-size: 10px; font-weight: 700; color: #0ea5e9; letter-spacing: 2.5px; text-transform: uppercase; margin-bottom: 14px; }
+    .sec-h { font-family: 'Sora', sans-serif; text-align: center; font-size: clamp(1.7rem, 3.5vw, 2.5rem); font-weight: 800; color: #f0f4ff; letter-spacing: -1px; margin-bottom: 14px; }
+    .sec-p { text-align: center; color: #3d4d5c; font-size: 0.95rem; max-width: 460px; margin: 0 auto 60px; line-height: 1.8; font-weight: 300; }
 
-    /* Feature grid */
-    .feat-grid {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 16px;
-        max-width: 960px;
-        margin: 0 auto;
-    }
+    /* ── Feature cards ── */
+    .feat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
     .feat-card {
         background: rgba(255,255,255,0.02);
-        border: 1px solid rgba(255,255,255,0.06);
-        border-radius: 20px;
-        padding: 28px;
-        transition: all 0.3s;
-        position: relative;
-        overflow: hidden;
+        border: 1px solid rgba(255,255,255,0.05);
+        border-radius: 22px; padding: 32px 28px;
+        position: relative; overflow: hidden;
+        transition: border-color 0.3s, transform 0.3s;
     }
-    .feat-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 1px;
-        background: linear-gradient(90deg, transparent, rgba(99,102,241,0.5), transparent);
+    .feat-card::after {
+        content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(14,165,233,0.4), transparent);
+        opacity: 0; transition: opacity 0.3s;
     }
-    .feat-icon-wrap {
-        width: 44px;
-        height: 44px;
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.3rem;
-        margin-bottom: 16px;
+    .feat-card:hover { border-color: rgba(14,165,233,0.2); transform: translateY(-3px); }
+    .feat-card:hover::after { opacity: 1; }
+    .feat-icon {
+        width: 46px; height: 46px; border-radius: 13px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.3rem; margin-bottom: 18px;
     }
-    .feat-title {
-        font-size: 0.95rem;
-        font-weight: 700;
-        color: #ffffff;
-        margin-bottom: 8px;
-    }
-    .feat-desc {
-        font-size: 0.82rem;
-        color: #4b5563;
-        line-height: 1.7;
-    }
+    .feat-h { font-family: 'Sora', sans-serif; font-size: 0.92rem; font-weight: 700; color: #d0daf0; margin-bottom: 10px; letter-spacing: -0.2px; }
+    .feat-p { font-size: 0.8rem; color: #2d3748; line-height: 1.75; font-weight: 300; }
 
-    /* Steps */
-    .steps-grid {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 16px;
-        max-width: 960px;
-        margin: 0 auto;
-        position: relative;
-    }
+    /* ── Steps ── */
+    .steps-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
     .step-card {
         background: rgba(255,255,255,0.02);
-        border: 1px solid rgba(255,255,255,0.06);
-        border-radius: 20px;
-        padding: 28px 20px;
-        text-align: center;
-        position: relative;
+        border: 1px solid rgba(255,255,255,0.05);
+        border-radius: 20px; padding: 32px 22px; text-align: center;
     }
-    .step-num {
-        width: 28px;
-        height: 28px;
-        background: linear-gradient(135deg, #6366f1, #8b5cf6);
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 12px;
-        font-weight: 700;
-        color: white;
-        margin: 0 auto 16px auto;
+    .step-n {
+        width: 32px; height: 32px; border-radius: 10px;
+        background: linear-gradient(135deg, #0ea5e9, #6366f1);
+        display: flex; align-items: center; justify-content: center;
+        font-family: 'Sora', sans-serif; font-size: 12px; font-weight: 700; color: #fff;
+        margin: 0 auto 18px;
     }
-    .step-icon { font-size: 1.6rem; margin-bottom: 12px; }
-    .step-text {
-        font-size: 0.82rem;
-        color: #6b7280;
-        line-height: 1.6;
-    }
+    .step-icon { font-size: 1.7rem; margin-bottom: 14px; }
+    .step-h { font-family: 'Sora', sans-serif; font-size: 0.88rem; font-weight: 700; color: #c8d0e0; margin-bottom: 8px; }
+    .step-p { font-size: 0.78rem; color: #2d3748; line-height: 1.7; font-weight: 300; }
 
-    /* CTA */
-    .cta-section {
-        text-align: center;
-        padding: 80px 24px;
-        position: relative;
-        z-index: 1;
-    }
+    /* ── CTA box ── */
+    .cta-section { padding: 90px 0; text-align: center; }
     .cta-box {
-        background: linear-gradient(135deg, rgba(99,102,241,0.1), rgba(139,92,246,0.1), rgba(236,72,153,0.05));
-        border: 1px solid rgba(99,102,241,0.2);
-        border-radius: 28px;
-        padding: 64px 40px;
-        max-width: 700px;
-        margin: 0 auto;
-        position: relative;
-        overflow: hidden;
+        background: linear-gradient(135deg, rgba(14,165,233,0.07), rgba(99,102,241,0.07), rgba(167,139,250,0.04));
+        border: 1px solid rgba(14,165,233,0.15);
+        border-radius: 28px; padding: 72px 48px;
+        max-width: 680px; margin: 0 auto; position: relative; overflow: hidden;
     }
     .cta-box::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 1px;
-        background: linear-gradient(90deg, transparent, rgba(99,102,241,0.8), rgba(236,72,153,0.8), transparent);
+        content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(14,165,233,0.6), rgba(99,102,241,0.6), transparent);
     }
-    .cta-title {
-        font-size: 2.4rem;
-        font-weight: 800;
-        color: #ffffff;
-        letter-spacing: -1px;
-        margin-bottom: 16px;
-    }
-    .cta-sub {
-        color: #6b7280;
-        font-size: 1rem;
-        margin-bottom: 36px;
-        line-height: 1.7;
-    }
+    .cta-h { font-family: 'Sora', sans-serif; font-size: clamp(1.8rem, 3.5vw, 2.6rem); font-weight: 800; color: #f0f4ff; letter-spacing: -1.5px; margin-bottom: 18px; }
+    .cta-p { color: #3d4d5c; font-size: 0.95rem; line-height: 1.8; margin-bottom: 40px; font-weight: 300; }
 
-    /* Footer */
+    /* ── Footer ── */
     .footer {
-        border-top: 1px solid rgba(255,255,255,0.06);
+        border-top: 1px solid rgba(255,255,255,0.04);
         padding: 40px 48px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        position: relative;
-        z-index: 1;
+        display: flex; justify-content: space-between; align-items: center;
     }
-    .footer-logo {
-        font-size: 1rem;
-        font-weight: 700;
-        color: #ffffff;
-    }
-    .footer-links {
-        display: flex;
-        gap: 24px;
-    }
-    .footer-link {
-        color: #4b5563;
-        font-size: 0.82rem;
-        text-decoration: none;
-    }
-    .footer-copy {
-        color: #374151;
-        font-size: 0.82rem;
-    }
-    .disclaimer {
-        text-align: center;
-        color: #1f2937;
-        font-size: 0.75rem;
-        padding: 16px 48px;
-        border-top: 1px solid rgba(255,255,255,0.03);
+    .footer-brand { font-family: 'Sora', sans-serif; font-size: 0.95rem; font-weight: 700; color: #c8d0e0; display: flex; align-items: center; gap: 8px; }
+    .footer-links { display: flex; gap: 28px; }
+    .footer-link { color: #2d3748; font-size: 0.8rem; }
+    .footer-copy { color: #1e2733; font-size: 0.78rem; }
+    .disc {
+        text-align: center; color: #1a2230; font-size: 0.72rem;
+        padding: 14px 48px; border-top: 1px solid rgba(255,255,255,0.02);
     }
 </style>
 
-<!-- Background orbs -->
-<div class="bg-orb-1"></div>
-<div class="bg-orb-2"></div>
-<div class="bg-orb-3"></div>
+<div class="canvas">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+</div>
 
 <!-- Nav -->
 <div class="nav">
-    <div class="nav-logo">🧠 Lumina</div>
+    <div class="nav-brand">
+        <div class="nav-dot"></div>
+        Lumina
+    </div>
     <div class="nav-links">
         <span class="nav-link">Features</span>
         <span class="nav-link">How it works</span>
-        <span class="nav-link">For Doctors</span>
+        <span class="nav-link">For Clinicians</span>
     </div>
 </div>
 
 <!-- Hero -->
+<div class="page">
 <div class="hero">
-    <div class="badge">✦ AI Mental Health Companion</div>
-    <div class="hero-title">
-        Your emotions deserve<br>
-        <span class="grad">to be understood</span>
-    </div>
-    <div class="hero-sub">
-        Lumina listens, understands, and responds with genuine empathy. 
-        Powered by advanced AI trained on 61,000+ emotional conversations.
-    </div>
+    <div class="eyebrow"><div class="eyebrow-dot"></div> Emotion-Aware AI</div>
+    <h1 class="hero-h1">
+        Your mind deserves<br>
+        <span class="accent">to be understood</span>
+    </h1>
+    <p class="hero-p">
+        Lumina listens deeply, reads your emotional state in real-time,
+        and responds with genuine human empathy — powered by AI trained
+        on 61,000+ emotional conversations.
+    </p>
+</div>
 </div>
 """, unsafe_allow_html=True)
 
-# CTA Buttons
-col1, col2, col3 = st.columns([1.5, 1, 1.5])
+col1, col2, col3 = st.columns([1.6, 1.2, 1.6])
 with col2:
-    if st.button("✦ Start Chatting Free", use_container_width=True, type="primary"):
+    if st.button("✦  Start Chatting — It's Free", use_container_width=True, type="primary"):
         st.switch_page("pages/Chat.py")
 
 st.markdown("""
 <!-- Stats -->
-<div class="page-wrap">
+<div class="page">
 <div class="stats">
-    <div class="stat">
-        <div class="stat-num">92.4%</div>
-        <div class="stat-lbl">Accuracy</div>
-    </div>
-    <div class="stat">
-        <div class="stat-num">8</div>
-        <div class="stat-lbl">Emotions</div>
-    </div>
-    <div class="stat">
-        <div class="stat-num">61K+</div>
-        <div class="stat-lbl">Training Data</div>
-    </div>
-    <div class="stat">
-        <div class="stat-num">24/7</div>
-        <div class="stat-lbl">Available</div>
-    </div>
-</div>
+    <div class="stat"><div class="stat-n">92.4%</div><div class="stat-l">Accuracy</div></div>
+    <div class="stat"><div class="stat-n">8</div><div class="stat-l">Emotions</div></div>
+    <div class="stat"><div class="stat-n">61K+</div><div class="stat-l">Trained On</div></div>
+    <div class="stat"><div class="stat-n">24/7</div><div class="stat-l">Available</div></div>
 </div>
 
 <!-- Features -->
 <div class="section">
-<div class="page-wrap">
-    <div class="section-label">Features</div>
-    <div class="section-title">Everything you need to feel heard</div>
-    <div class="section-sub">Built with cutting-edge AI to support your mental wellness journey.</div>
+    <div class="sec-tag">Capabilities</div>
+    <div class="sec-h">Everything you need to feel heard</div>
+    <div class="sec-p">Built with clinical-grade AI to support your mental wellness — every single day.</div>
     <div class="feat-grid">
         <div class="feat-card">
-            <div class="feat-icon-wrap" style="background:rgba(99,102,241,0.15)">🎭</div>
-            <div class="feat-title">Real-Time Emotion Detection</div>
-            <div class="feat-desc">Detects 8 emotions instantly using fine-tuned DistilBERT trained on 61,000+ sentences with 92.4% accuracy.</div>
+            <div class="feat-icon" style="background:rgba(14,165,233,0.1)">🎭</div>
+            <div class="feat-h">Real-Time Emotion Detection</div>
+            <div class="feat-p">8 emotions identified instantly using fine-tuned DistilBERT — trained on 61,000+ sentences at 92.4% accuracy.</div>
         </div>
         <div class="feat-card">
-            <div class="feat-icon-wrap" style="background:rgba(139,92,246,0.15)">💬</div>
-            <div class="feat-title">Empathetic AI Responses</div>
-            <div class="feat-desc">Powered by Gemini 2.5 Flash with real-time streaming — responses feel natural and deeply human.</div>
+            <div class="feat-icon" style="background:rgba(99,102,241,0.1)">💬</div>
+            <div class="feat-h">Empathetic AI Responses</div>
+            <div class="feat-p">Groq LLaMA 3.1 with Gemini 2.0 Flash fallback — responses feel warm, natural, and deeply personal.</div>
         </div>
         <div class="feat-card">
-            <div class="feat-icon-wrap" style="background:rgba(239,68,68,0.15)">🚨</div>
-            <div class="feat-title">Crisis Detection</div>
-            <div class="feat-desc">Automatically detects distress signals and immediately connects users with emergency helplines.</div>
+            <div class="feat-icon" style="background:rgba(239,68,68,0.1)">🚨</div>
+            <div class="feat-h">Crisis Detection</div>
+            <div class="feat-p">Automatically detects distress signals and immediately surfaces emergency helplines with care.</div>
         </div>
         <div class="feat-card">
-            <div class="feat-icon-wrap" style="background:rgba(16,185,129,0.15)">📊</div>
-            <div class="feat-title">Emotion Analytics</div>
-            <div class="feat-desc">Visual timeline tracking your emotional journey with insights on dominant moods and patterns.</div>
+            <div class="feat-icon" style="background:rgba(20,184,166,0.1)">📊</div>
+            <div class="feat-h">Emotion Analytics</div>
+            <div class="feat-p">A visual timeline tracks your emotional journey — dominant moods, patterns, and session insights.</div>
         </div>
         <div class="feat-card">
-            <div class="feat-icon-wrap" style="background:rgba(245,158,11,0.15)">📄</div>
-            <div class="feat-title">Clinical PDF Reports</div>
-            <div class="feat-desc">Export professional mental health reports with risk assessment for doctors and therapists.</div>
+            <div class="feat-icon" style="background:rgba(245,158,11,0.1)">📄</div>
+            <div class="feat-h">Clinical PDF Reports</div>
+            <div class="feat-p">Export professional mental health reports with risk assessment, ready to share with your therapist.</div>
         </div>
         <div class="feat-card">
-            <div class="feat-icon-wrap" style="background:rgba(99,102,241,0.15)">🔒</div>
-            <div class="feat-title">Private & Secure</div>
-            <div class="feat-desc">Zero data storage. Your conversations are completely private and never shared with anyone.</div>
+            <div class="feat-icon" style="background:rgba(167,139,250,0.1)">🔒</div>
+            <div class="feat-h">Completely Private</div>
+            <div class="feat-p">Zero data storage. Your conversations exist only in your session — never stored, never shared.</div>
         </div>
     </div>
-</div>
 </div>
 
 <!-- How it works -->
 <div class="section" style="padding-top:0">
-<div class="page-wrap">
-    <div class="section-label">Process</div>
-    <div class="section-title">How Lumina works</div>
-    <div class="section-sub">Four simple steps to emotional clarity.</div>
+    <div class="sec-tag">Process</div>
+    <div class="sec-h">How Lumina works</div>
+    <div class="sec-p">From your words to emotional clarity — in seconds.</div>
     <div class="steps-grid">
         <div class="step-card">
-            <div class="step-num">1</div>
+            <div class="step-n">1</div>
             <div class="step-icon">💬</div>
-            <div class="feat-title">Share</div>
-            <div class="step-text">Type how you're feeling in your own words, naturally</div>
+            <div class="step-h">Share</div>
+            <div class="step-p">Type how you're feeling in your own words, naturally and freely</div>
         </div>
         <div class="step-card">
-            <div class="step-num">2</div>
+            <div class="step-n">2</div>
             <div class="step-icon">🧠</div>
-            <div class="feat-title">Detect</div>
-            <div class="step-text">AI instantly identifies your emotion with 92.4% accuracy</div>
+            <div class="step-h">Detect</div>
+            <div class="step-p">AI identifies your emotion with 92.4% accuracy in milliseconds</div>
         </div>
         <div class="step-card">
-            <div class="step-num">3</div>
+            <div class="step-n">3</div>
             <div class="step-icon">💙</div>
-            <div class="feat-title">Respond</div>
-            <div class="step-text">Receive a warm, personalized empathetic response</div>
+            <div class="step-h">Respond</div>
+            <div class="step-p">Receive a warm, personalized, empathetic reply crafted just for you</div>
         </div>
         <div class="step-card">
-            <div class="step-num">4</div>
+            <div class="step-n">4</div>
             <div class="step-icon">📄</div>
-            <div class="feat-title">Report</div>
-            <div class="step-text">Export clinical report for your doctor when needed</div>
+            <div class="step-h">Report</div>
+            <div class="step-p">Export a clinical-grade session report for your doctor or therapist</div>
         </div>
     </div>
 </div>
@@ -536,24 +366,24 @@ st.markdown("""
 
 <!-- CTA -->
 <div class="cta-section">
+<div class="page">
 <div class="cta-box">
-    <div class="cta-title">Ready to feel understood?</div>
-    <div class="cta-sub">Join thousands of people using Lumina to understand and manage their emotions better every day.</div>
+    <div class="cta-h">Ready to feel understood?</div>
+    <div class="cta-p">Join thousands of people using Lumina to understand and manage their emotions — one conversation at a time.</div>
+</div>
 </div>
 </div>
 
 <!-- Footer -->
 <div class="footer">
-    <div class="footer-logo">🧠 Lumina</div>
+    <div class="footer-brand"><div class="nav-dot"></div> Lumina</div>
     <div class="footer-links">
-        <span class="footer-link">Privacy Policy</span>
-        <span class="footer-link">Terms of Use</span>
+        <span class="footer-link">Privacy</span>
+        <span class="footer-link">Terms</span>
         <span class="footer-link">Contact</span>
         <span class="footer-link">GitHub</span>
     </div>
-    <div class="footer-copy">© 2026 Lumina. All rights reserved.</div>
+    <div class="footer-copy">© 2026 Lumina</div>
 </div>
-<div class="disclaimer">
-    ⚠️ Lumina is not a substitute for professional mental health care. If you are in crisis, please contact a qualified professional.
-</div>
+<div class="disc">⚠ Lumina is not a substitute for professional mental health care. In crisis, please contact a qualified professional.</div>
 """, unsafe_allow_html=True)
