@@ -76,7 +76,7 @@ st.markdown("""
         50% { opacity: 0.5; transform: scale(0.7); }
     }
     .nav-links { display: flex; gap: 36px; }
-    .nav-link { font-size: 0.85rem; color: #4b5a6e; font-weight: 400; letter-spacing: 0.2px; }
+    .nav-link { font-size: 0.85rem; color: #a0aec0; font-weight: 400; letter-spacing: 0.2px; }
 
     /* ── Hero ── */
     .hero {
@@ -100,7 +100,7 @@ st.markdown("""
     .hero-h1 {
         font-family: 'Sora', sans-serif;
         font-size: clamp(2.8rem, 6vw, 5rem);
-        font-weight: 800; color: #f0f4ff;
+        font-weight: 800; color: #ffffff;
         line-height: 1.08; letter-spacing: -2.5px;
         margin-bottom: 28px;
     }
@@ -111,7 +111,7 @@ st.markdown("""
     }
 
     .hero-p {
-        font-size: 1.05rem; color: #4b5a6e; line-height: 1.85;
+        font-size: 1.05rem; color: #a0aec0; line-height: 1.85;
         max-width: 480px; margin: 0 auto 52px; font-weight: 300;
     }
 
@@ -159,12 +159,12 @@ st.markdown("""
         -webkit-background-clip: text; -webkit-text-fill-color: transparent;
         background-clip: text; letter-spacing: -1px;
     }
-    .stat-l { font-size: 0.72rem; color: #2d3748; margin-top: 5px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.8px; }
+    .stat-l { font-size: 0.72rem; color: #6b7280; margin-top: 5px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.8px; }
 
     /* ── Section ── */
     .section { padding: 90px 0; }
     .sec-tag { text-align: center; font-size: 10px; font-weight: 700; color: #0ea5e9; letter-spacing: 2.5px; text-transform: uppercase; margin-bottom: 14px; }
-    .sec-h { font-family: 'Sora', sans-serif; text-align: center; font-size: clamp(1.7rem, 3.5vw, 2.5rem); font-weight: 800; color: #f0f4ff; letter-spacing: -1px; margin-bottom: 14px; }
+    .sec-h { font-family: 'Sora', sans-serif; text-align: center; font-size: clamp(1.7rem, 3.5vw, 2.5rem); font-weight: 800; color: #ffffff; letter-spacing: -1px; margin-bottom: 14px; }
     .sec-p { text-align: center; color: #3d4d5c; font-size: 0.95rem; max-width: 460px; margin: 0 auto 60px; line-height: 1.8; font-weight: 300; }
 
     /* ── Feature cards ── */
@@ -189,7 +189,7 @@ st.markdown("""
         font-size: 1.3rem; margin-bottom: 18px;
     }
     .feat-h { font-family: 'Sora', sans-serif; font-size: 0.92rem; font-weight: 700; color: #d0daf0; margin-bottom: 10px; letter-spacing: -0.2px; }
-    .feat-p { font-size: 0.8rem; color: #2d3748; line-height: 1.75; font-weight: 300; }
+    .feat-p { font-size: 0.8rem; color: #6b7280; line-height: 1.75; font-weight: 300; }
 
     /* ── Steps ── */
     .steps-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
@@ -207,7 +207,7 @@ st.markdown("""
     }
     .step-icon { font-size: 1.7rem; margin-bottom: 14px; }
     .step-h { font-family: 'Sora', sans-serif; font-size: 0.88rem; font-weight: 700; color: #c8d0e0; margin-bottom: 8px; }
-    .step-p { font-size: 0.78rem; color: #2d3748; line-height: 1.7; font-weight: 300; }
+    .step-p { font-size: 0.78rem; color: #6b7280; line-height: 1.7; font-weight: 300; }
 
     /* ── CTA box ── */
     .cta-section { padding: 90px 0; text-align: center; }
@@ -221,7 +221,7 @@ st.markdown("""
         content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
         background: linear-gradient(90deg, transparent, rgba(14,165,233,0.6), rgba(99,102,241,0.6), transparent);
     }
-    .cta-h { font-family: 'Sora', sans-serif; font-size: clamp(1.8rem, 3.5vw, 2.6rem); font-weight: 800; color: #f0f4ff; letter-spacing: -1.5px; margin-bottom: 18px; }
+    .cta-h { font-family: 'Sora', sans-serif; font-size: clamp(1.8rem, 3.5vw, 2.6rem); font-weight: 800; color: #ffffff; letter-spacing: -1.5px; margin-bottom: 18px; }
     .cta-p { color: #3d4d5c; font-size: 0.95rem; line-height: 1.8; margin-bottom: 40px; font-weight: 300; }
 
     /* ── Footer ── */
@@ -232,7 +232,7 @@ st.markdown("""
     }
     .footer-brand { font-family: 'Sora', sans-serif; font-size: 0.95rem; font-weight: 700; color: #c8d0e0; display: flex; align-items: center; gap: 8px; }
     .footer-links { display: flex; gap: 28px; }
-    .footer-link { color: #2d3748; font-size: 0.8rem; }
+    .footer-link { color: #6b7280; font-size: 0.8rem; }
     .footer-copy { color: #1e2733; font-size: 0.78rem; }
     .disc {
         text-align: center; color: #1a2230; font-size: 0.72rem;
