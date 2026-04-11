@@ -22,7 +22,7 @@ st.markdown("""
     div[data-testid="stSidebar"] { display: none !important; }
     #MainMenu, header, footer { visibility: hidden; }
     .block-container { padding: 0 !important; max-width: 100% !important; }
-    .stButton > button { all: unset; cursor: pointer; }
+    .stButton > button { all: unset; cursor: pointer; background: linear-gradient(135deg, #0ea5e9, #6366f1) !important; color: white !important; padding: 16px 48px !important; border-radius: 14px !important; font-size: 1.1rem !important; font-weight: 700 !important; box-shadow: 0 0 40px rgba(14,165,233,0.5) !important; display: block !important; width: 100% !important; text-align: center !important; }
 
     /* ── Canvas ── */
     .canvas {
