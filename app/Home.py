@@ -1,7 +1,7 @@
 import streamlit as st
 
 st.set_page_config(
-    page_title="EmotiBot — AI Mental Health Companion",
+    page_title="Lumina — AI Mental Health Companion",
     page_icon="🧠",
     layout="wide"
 )
@@ -407,7 +407,7 @@ st.markdown("""
 
 <!-- Nav -->
 <div class="nav">
-    <div class="nav-logo">🧠 EmotiBot</div>
+    <div class="nav-logo">🧠 Lumina</div>
     <div class="nav-links">
         <span class="nav-link">Features</span>
         <span class="nav-link">How it works</span>
@@ -423,7 +423,7 @@ st.markdown("""
         <span class="grad">to be understood</span>
     </div>
     <div class="hero-sub">
-        EmotiBot listens, understands, and responds with genuine empathy. 
+        Lumina listens, understands, and responds with genuine empathy. 
         Powered by advanced AI trained on 61,000+ emotional conversations.
     </div>
 </div>
@@ -503,7 +503,7 @@ st.markdown("""
 <div class="section" style="padding-top:0">
 <div class="page-wrap">
     <div class="section-label">Process</div>
-    <div class="section-title">How EmotiBot works</div>
+    <div class="section-title">How Lumina works</div>
     <div class="section-sub">Four simple steps to emotional clarity.</div>
     <div class="steps-grid">
         <div class="step-card">
@@ -538,22 +538,22 @@ st.markdown("""
 <div class="cta-section">
 <div class="cta-box">
     <div class="cta-title">Ready to feel understood?</div>
-    <div class="cta-sub">Join thousands of people using EmotiBot to understand and manage their emotions better every day.</div>
+    <div class="cta-sub">Join thousands of people using Lumina to understand and manage their emotions better every day.</div>
 </div>
 </div>
 
 <!-- Footer -->
 <div class="footer">
-    <div class="footer-logo">🧠 EmotiBot</div>
+    <div class="footer-logo">🧠 Lumina</div>
     <div class="footer-links">
         <span class="footer-link">Privacy Policy</span>
         <span class="footer-link">Terms of Use</span>
         <span class="footer-link">Contact</span>
         <span class="footer-link">GitHub</span>
     </div>
-    <div class="footer-copy">© 2026 EmotiBot. All rights reserved.</div>
+    <div class="footer-copy">© 2026 Lumina. All rights reserved.</div>
 </div>
 <div class="disclaimer">
-    ⚠️ EmotiBot is not a substitute for professional mental health care. If you are in crisis, please contact a qualified professional.
+    ⚠️ Lumina is not a substitute for professional mental health care. If you are in crisis, please contact a qualified professional.
 </div>
 """, unsafe_allow_html=True)

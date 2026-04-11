@@ -49,7 +49,7 @@ def predict_emotion(text, tokenizer, model, le):
 def get_gemini_response(messages, emotion, confidence, api_key):
     try:
         client = genai.Client(api_key=api_key)
-        prompt = f"""You are EmotiBot — a professional, warm, empathetic AI mental health companion.
+        prompt = f"""You are Lumina — a professional, warm, empathetic AI mental health companion.
 The user's detected emotion is: {emotion} (confidence: {confidence}%)
 
 Rules:
@@ -65,9 +65,9 @@ Rules:
 Conversation so far:
 """
         for msg in messages[:-1]:
-            role = "User" if msg['role'] == 'user' else "EmotiBot"
+            role = "User" if msg['role'] == 'user' else "Lumina"
             prompt += f"{role}: {msg['content']}\n"
-        prompt += f"\nUser: {messages[-1]['content']}\nEmotiBot:"
+        prompt += f"\nUser: {messages[-1]['content']}\nLumina:"
 
         full_reply = ""
         placeholder = st.empty()
@@ -89,7 +89,7 @@ Conversation so far:
         if '503' in str(e) or 'UNAVAILABLE' in str(e):
             return "Gemini is busy right now, please send your message again in a moment. 🙏"
         return f"Error: {str(e)}"
-st.set_page_config(page_title="EmotiBot", page_icon="🧠", layout="centered")
+st.set_page_config(page_title="Lumina", page_icon="🧠", layout="centered")
 
 st.markdown("""
 <style>
@@ -115,7 +115,7 @@ st.markdown("""
 
 st.markdown("""
 <div class="main-header">
-    <div class="main-title">🧠 EmotiBot</div>
+    <div class="main-title">🧠 Lumina</div>
     <div class="main-subtitle">Professional Emotion-Aware AI Companion</div>
     <div class="status-bar">
         <span class="status-pill active">● Live</span>
@@ -208,7 +208,7 @@ with st.sidebar:
                         st.session_state.feedback
                     )
                     if pdf_buffer:
-                        fname = f"emotibot_report_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf"
+                        fname = f"lumina_report_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf"
                         st.download_button(
                             label="⬇️ Download PDF Report",
                             data=pdf_buffer,
