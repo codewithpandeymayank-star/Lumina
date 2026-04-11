@@ -5,6 +5,7 @@ import pickle
 from google import genai
 from google.genai import types
 from huggingface_hub import hf_hub_download
+from groq import Groq
 import pandas as pd
 from datetime import datetime
 import time
@@ -44,7 +45,6 @@ def predict_emotion(text, tokenizer, model, le):
     emotion = le.inverse_transform([pred])[0]
     if confidence < 0.55:
         emotion = 'neutral'
-    # Negation override
     negation_words = ['not good', 'not ok', 'not fine', 'not well', 'not great',
                       'actually not', 'but not', 'dont feel good', 'do not feel good',
                       'not feeling good', 'not feeling well', 'not happy', 'not okay']
@@ -54,51 +54,237 @@ def predict_emotion(text, tokenizer, model, le):
             emotion = "sadness"
     return emotion, round(confidence * 100, 1)
 
-def get_gemini_response(messages, emotion, confidence, api_key):
-    try:
-        client = genai.Client(api_key=api_key)
-        prompt = f"""You are Lumina — a professional, warm, empathetic AI mental health companion.
+def get_ai_response(messages, emotion, confidence, api_key, groq_key):
+    if groq_key:
+        try:
+            client = Groq(api_key=groq_key)
+            system_msg = f"""You are Lumina — a professional, warm, empathetic AI mental health companion.
 The user's detected emotion is: {emotion} (confidence: {confidence}%)
-
 Rules:
 - Talk like a caring friend, not a robot
-- Remember the full conversation and refer back naturally
+- Remember the full conversation naturally
 - Ask ONE thoughtful follow-up question
 - Validate feelings before giving advice
-- Keep responses STRICTLY 1 sentence only, very short and concise
+- Keep responses STRICTLY 1-2 sentences maximum
 - Use emojis occasionally
-- Never say "As an AI"
-- Never give medical diagnosis
-
-Conversation so far:
-"""
-        for msg in messages[:-1]:
-            role = "User" if msg['role'] == 'user' else "Lumina"
-            prompt += f"{role}: {msg['content']}\n"
-        prompt += f"\nUser: {messages[-1]['content']}\nLumina:"
-
-        full_reply = ""
-        placeholder = st.empty()
-        for chunk in client.models.generate_content_stream(
-            model="gemini-2.0-flash",
-            contents=prompt,
-            config=types.GenerateContentConfig(
-                thinking_config=types.ThinkingConfig(thinking_budget=0),
-                max_output_tokens=80,
+- Never say 'As an AI'
+- Never give medical diagnosis"""
+            conversation = [{"role": "system", "content": system_msg}]
+            for msg in messages:
+                role = "user" if msg['role'] == 'user' else "assistant"
+                conversation.append({"role": role, "content": msg['content']})
+            response = client.chat.completions.create(
+                model="llama-3.1-8b-instant",
+                messages=conversation,
+                max_tokens=100,
                 temperature=0.8,
             )
-        ):
-            if chunk.text:
-                full_reply += chunk.text
-                placeholder.markdown(full_reply + "▌")
-        placeholder.markdown(full_reply)
-        return full_reply
+            return response.choices[0].message.content
+        except Exception as e:
+            if '429' not in str(e) and 'limit' not in str(e).lower():
+                return f"Error: {str(e)}"
+
+    if api_key:
+        try:
+            client = genai.Client(api_key=api_key)
+            prompt = f"You are Lumina — empathetic AI. Emotion: {emotion}. Reply in 1-2 sentences max.\n"
+            for msg in messages[:-1]:
+                role = "User" if msg['role'] == 'user' else "Lumina"
+                prompt += f"{role}: {msg['content']}\n"
+            prompt += f"\nUser: {messages[-1]['content']}\nLumina:"
+            full_reply = ""
+            placeholder = st.empty()
+            for chunk in client.models.generate_content_stream(
+                model="gemini-2.0-flash",
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    thinking_config=types.ThinkingConfig(thinking_budget=0),
+                    max_output_tokens=80,
+                    temperature=0.8,
+                )
+            ):
+                if chunk.text:
+                    full_reply += chunk.text
+                    placeholder.markdown(full_reply + "▌")
+            placeholder.markdown(full_reply)
+            return full_reply
+        except Exception as e:
+            if '429' in str(e) or 'EXHAUSTED' in str(e):
+                return "Daily AI limit reached. Please try again tomorrow. 🙏"
+            if '503' in str(e) or 'UNAVAILABLE' in str(e):
+                return "AI is busy right now, please try again in a moment. 🙏"
+            return f"Error: {str(e)}"
+    return "Please configure your API key. 🔑"
+
+def generate_pdf_report(messages, emotions, confidences, timestamps, feedback):
+    try:
+        from reportlab.lib.pagesizes import A4
+        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+        from reportlab.lib.units import inch
+        from reportlab.lib import colors
+        from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, HRFlowable
+        from reportlab.lib.enums import TA_CENTER
+
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=A4,
+                                rightMargin=0.75*inch, leftMargin=0.75*inch,
+                                topMargin=0.75*inch, bottomMargin=0.75*inch)
+        styles = getSampleStyleSheet()
+        story = []
+
+        title_style = ParagraphStyle('Title', parent=styles['Title'],
+                                     fontSize=20, textColor=colors.HexColor('#1a1a2e'),
+                                     spaceAfter=6, alignment=TA_CENTER)
+        subtitle_style = ParagraphStyle('Subtitle', parent=styles['Normal'],
+                                        fontSize=11, textColor=colors.HexColor('#4a4a8a'),
+                                        spaceAfter=4, alignment=TA_CENTER)
+        story.append(Paragraph("Lumina — Mental Health Session Report", title_style))
+        story.append(Paragraph("Emotion-Aware AI Companion Analysis", subtitle_style))
+        story.append(Paragraph(f"Generated: {datetime.now().strftime('%B %d, %Y at %I:%M %p')}", subtitle_style))
+        story.append(HRFlowable(width="100%", thickness=2, color=colors.HexColor('#4a4a8a')))
+        story.append(Spacer(1, 0.2*inch))
+
+        section_style = ParagraphStyle('Section', parent=styles['Heading2'],
+                                       fontSize=13, textColor=colors.HexColor('#1a1a2e'),
+                                       spaceBefore=12, spaceAfter=6)
+        story.append(Paragraph("Session Summary", section_style))
+
+        emotion_counts = {}
+        for e in emotions:
+            emotion_counts[e] = emotion_counts.get(e, 0) + 1
+
+        dominant = max(emotion_counts, key=emotion_counts.get) if emotion_counts else "N/A"
+        avg_conf = round(sum(confidences)/len(confidences), 1) if confidences else 0
+        crisis_count = sum(1 for m in messages if m['role'] == 'user' and is_crisis(m['content']))
+
+        if crisis_count > 0:
+            risk_level = "HIGH RISK"
+            risk_color = colors.HexColor('#cc0000')
+            recommendation = "IMMEDIATE professional consultation recommended"
+        elif dominant in ['sadness', 'fear', 'anger'] and len(emotions) > 3:
+            risk_level = "MODERATE RISK"
+            risk_color = colors.HexColor('#ff8800')
+            recommendation = "Professional consultation suggested"
+        else:
+            risk_level = "LOW RISK"
+            risk_color = colors.HexColor('#006600')
+            recommendation = "Regular monitoring recommended"
+
+        summary_data = [
+            ['Metric', 'Value'],
+            ['Total Messages', str(len([m for m in messages if m['role'] == 'user']))],
+            ['Dominant Emotion', dominant.capitalize()],
+            ['Average Confidence', f"{avg_conf}%"],
+            ['Crisis Signals Detected', str(crisis_count)],
+            ['Risk Assessment', risk_level],
+            ['Recommendation', recommendation],
+        ]
+
+        summary_table = Table(summary_data, colWidths=[2.5*inch, 4*inch])
+        summary_table.setStyle(TableStyle([
+            ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#1a1a2e')),
+            ('TEXTCOLOR', (0,0), (-1,0), colors.white),
+            ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+            ('ROWBACKGROUNDS', (0,1), (-1,-1), [colors.HexColor('#f0f2ff'), colors.white]),
+            ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#ccccdd')),
+            ('FONTNAME', (0,1), (0,-1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0,0), (-1,-1), 10),
+            ('PADDING', (0,0), (-1,-1), 8),
+            ('TEXTCOLOR', (1,5), (1,5), risk_color),
+            ('FONTNAME', (1,5), (1,5), 'Helvetica-Bold'),
+        ]))
+        story.append(summary_table)
+        story.append(Spacer(1, 0.2*inch))
+
+        story.append(Paragraph("Emotion Distribution", section_style))
+        if emotion_counts:
+            total = len(emotions)
+            indicators = {
+                'joy': 'Positive — Good mental state',
+                'love': 'Positive — Strong social connection',
+                'surprise': 'Neutral — Reactive state',
+                'neutral': 'Neutral — Stable baseline',
+                'fear': 'Negative — Anxiety/stress present',
+                'sadness': 'Negative — Depression risk',
+                'anger': 'Negative — Frustration/aggression',
+                'disgust': 'Negative — Aversion/discomfort',
+            }
+            emo_data = [['Emotion', 'Count', 'Percentage', 'Mental Health Indicator']]
+            for emo, count in sorted(emotion_counts.items(), key=lambda x: x[1], reverse=True):
+                pct = round(count/total*100, 1)
+                emo_data.append([emo.capitalize(), str(count), f"{pct}%", indicators.get(emo, 'N/A')])
+
+            emo_table = Table(emo_data, colWidths=[1.2*inch, 0.8*inch, 1*inch, 3.5*inch])
+            emo_table.setStyle(TableStyle([
+                ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#4a4a8a')),
+                ('TEXTCOLOR', (0,0), (-1,0), colors.white),
+                ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+                ('ROWBACKGROUNDS', (0,1), (-1,-1), [colors.HexColor('#f0f2ff'), colors.white]),
+                ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#ccccdd')),
+                ('FONTSIZE', (0,0), (-1,-1), 10),
+                ('PADDING', (0,0), (-1,-1), 7),
+            ]))
+            story.append(emo_table)
+            story.append(Spacer(1, 0.2*inch))
+
+        story.append(Paragraph("Full Conversation Log", section_style))
+        user_style = ParagraphStyle('User', parent=styles['Normal'],
+                                    fontSize=9, textColor=colors.HexColor('#1a1a2e'),
+                                    backColor=colors.HexColor('#e8f0fe'),
+                                    borderPadding=6, spaceAfter=4)
+        bot_style = ParagraphStyle('Bot', parent=styles['Normal'],
+                                   fontSize=9, textColor=colors.HexColor('#1a1a2e'),
+                                   backColor=colors.HexColor('#f0fff0'),
+                                   borderPadding=6, spaceAfter=4)
+        label_style = ParagraphStyle('Label', parent=styles['Normal'],
+                                     fontSize=8, textColor=colors.HexColor('#666688'),
+                                     spaceAfter=2)
+
+        emotion_idx = 0
+        for i, msg in enumerate(messages):
+            ts = timestamps[i] if i < len(timestamps) else ""
+            if msg['role'] == 'user':
+                emo = emotions[emotion_idx] if emotion_idx < len(emotions) else ""
+                conf = confidences[emotion_idx] if emotion_idx < len(confidences) else ""
+                story.append(Paragraph(f"User — {ts} | Emotion: {emo.capitalize()} ({conf}%)", label_style))
+                story.append(Paragraph(msg['content'], user_style))
+                emotion_idx += 1
+            else:
+                fb = feedback.get(i, "")
+                fb_text = " | Feedback: Helpful" if fb == "up" else " | Feedback: Not helpful" if fb == "down" else ""
+                story.append(Paragraph(f"Lumina — {ts}{fb_text}", label_style))
+                story.append(Paragraph(msg['content'], bot_style))
+
+        story.append(Spacer(1, 0.2*inch))
+        story.append(HRFlowable(width="100%", thickness=1, color=colors.HexColor('#ccccdd')))
+        story.append(Paragraph("Doctor / Therapist Notes", section_style))
+        notes_data = [['', ''], ['', ''], ['', ''], ['', ''], ['', '']]
+        notes_table = Table(notes_data, colWidths=[6.5*inch, 0.1*inch])
+        notes_table.setStyle(TableStyle([
+            ('LINEBELOW', (0,0), (0,-1), 0.5, colors.HexColor('#999999')),
+            ('ROWHEIGHT', (0,0), (-1,-1), 25),
+        ]))
+        story.append(notes_table)
+        story.append(Spacer(1, 0.15*inch))
+
+        disclaimer_style = ParagraphStyle('Disclaimer', parent=styles['Normal'],
+                                          fontSize=8, textColor=colors.HexColor('#888888'),
+                                          alignment=TA_CENTER)
+        story.append(Paragraph(
+            "This report is generated by an AI system and is intended to assist mental health professionals only. "
+            "It is not a medical diagnosis. Always consult a qualified professional for clinical decisions.",
+            disclaimer_style))
+        story.append(Paragraph(
+            "Generated by Lumina | github.com/codewithpandeymayank-star/lumina",
+            disclaimer_style))
+
+        doc.build(story)
+        buffer.seek(0)
+        return buffer
     except Exception as e:
-        if '429' in str(e) or 'EXHAUSTED' in str(e):
-            return 'Daily AI limit reached. Please try again tomorrow or upgrade your API plan. 🙏'
-        if '503' in str(e) or 'UNAVAILABLE' in str(e):
-            return "Gemini is busy right now, please send your message again in a moment. 🙏"
-        return f"Error: {str(e)}"
+        st.error(f"PDF Error: {str(e)}")
+        return None
+
 st.set_page_config(page_title="Lumina", page_icon="🧠", layout="centered")
 
 st.markdown("""
@@ -129,7 +315,7 @@ st.markdown("""
     <div class="main-subtitle">Professional Emotion-Aware AI Companion</div>
     <div class="status-bar">
         <span class="status-pill active">● Live</span>
-        <span class="status-pill">Gemini 2.5 Flash</span>
+        <span class="status-pill">Groq + Llama 3</span>
         <span class="status-pill">92.4% Accuracy</span>
         <span class="status-pill">8 Emotions</span>
         <span class="status-pill">Crisis Detection</span>
@@ -166,16 +352,23 @@ COLORS = {
 with st.sidebar:
     st.markdown("<p class='sidebar-section'>Configuration</p>", unsafe_allow_html=True)
     try:
-        api_key = st.secrets["GEMINI_API_KEY"]
-        st.success("✅ API Connected")
+        api_key = st.secrets.get("GEMINI_API_KEY", "")
+        groq_key = st.secrets.get("GROQ_API_KEY", "")
+        if groq_key:
+            st.success("✅ Groq AI Connected")
+        elif api_key:
+            st.success("✅ Gemini Connected")
+        else:
+            st.warning("⚠️ No API key found")
     except:
-        api_key = st.text_input("Gemini API Key", type="password", placeholder="AIzaSy...")
-        st.caption("Get free key at aistudio.google.com")
+        api_key = ""
+        groq_key = ""
+        st.warning("⚠️ No API key found")
 
     st.divider()
     st.markdown("<p class='sidebar-section'>Emotion Timeline</p>", unsafe_allow_html=True)
     if st.session_state.emotions:
-        emotion_order = {'joy': 6, 'love': 5, 'surprise': 4, 'neutral': 3, 'fear': 2, 'sadness': 1, 'anger': 0}
+        emotion_order = {'joy': 6, 'love': 5, 'surprise': 4, 'neutral': 3, 'fear': 2, 'sadness': 1, 'anger': 0, 'disgust': 0}
         df = pd.DataFrame({
             'msg': range(1, len(st.session_state.emotions)+1),
             'score': [emotion_order.get(e, 3) for e in st.session_state.emotions]
@@ -289,19 +482,14 @@ You are not alone. People care about you. 💙"""
             st.markdown(f"<div class='crisis-box'>🚨 <strong>Crisis Support</strong><br><br>{crisis_reply}</div>", unsafe_allow_html=True)
         st.session_state.messages.append({'role': 'assistant', 'content': crisis_reply})
         st.session_state.timestamps.append(ts)
-
-    elif api_key and api_key.startswith('AIza'):
+    else:
         with st.chat_message('assistant'):
-            with st.spinner(""):
-                time.sleep(0.5)
-                reply = get_gemini_response(
-                    st.session_state.messages,
-                    emotion, confidence, api_key
-                )
+            reply = get_ai_response(
+                st.session_state.messages,
+                emotion, confidence, api_key, groq_key
+            )
+            if reply:
                 st.write(reply)
                 st.session_state.messages.append({'role': 'assistant', 'content': reply})
                 st.session_state.timestamps.append(ts)
-    else:
-        with st.chat_message('assistant'):
-            st.warning("Please enter your Gemini API key in the sidebar.")
     st.rerun()

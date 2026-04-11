@@ -3,6 +3,7 @@ import torch
 from transformers import DistilBertTokenizerFast, DistilBertForSequenceClassification
 import pickle
 from google import genai
+from groq import Groq
 from google.genai import types
 from huggingface_hub import hf_hub_download
 import pandas as pd
