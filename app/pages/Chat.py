@@ -264,9 +264,15 @@ st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=DM+Sans:wght@300;400;500&display=swap');
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-html,body,.stApp{font-family:'DM Sans',sans-serif;background:#f8fafc;color:#1e293b}
+html,body,.stApp{
+    font-family:'DM Sans',sans-serif;
+    background: radial-gradient(circle at 20% 30%, rgba(56,189,248,0.15), transparent 40%),
+                radial-gradient(circle at 80% 70%, rgba(129,140,248,0.15), transparent 40%),
+                #06090f;
+    color:#E6EDF3;
+}
 #MainMenu,footer{visibility:hidden}header{visibility:hidden}
-.stApp{background:linear-gradient(135deg,#f0f9ff 0%,#f8fafc 50%,#fdf4ff 100%);min-height:100vh}
+..stApp{min-height:100vh}
 .lumina-header{background:rgba(255,255,255,0.88);backdrop-filter:blur(20px);border-bottom:1px solid rgba(14,165,233,0.12);padding:18px 0 14px;text-align:center;margin-bottom:8px;position:sticky;top:0;z-index:100}
 .lumina-logo{font-family:'Plus Jakarta Sans',sans-serif;font-size:1.4rem;font-weight:700;color:#0f172a;letter-spacing:-0.5px;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:9px}
 .live-dot{width:7px;height:7px;border-radius:50%;background:#10b981;box-shadow:0 0 0 3px rgba(16,185,129,0.2);display:inline-block;animation:pglow 2s infinite}
@@ -278,9 +284,17 @@ html,body,.stApp{font-family:'DM Sans',sans-serif;background:#f8fafc;color:#1e29
 .emo-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:100px;font-size:10.5px;font-weight:600;margin-top:5px}
 .ts{color:#94a3b8;font-size:10px;margin-left:4px}
 [data-testid="stChatMessage"]{background:transparent!important;padding:2px 0!important}
-[data-testid="stChatMessageContent"]{background:rgba(255,255,255,0.92)!important;border:1px solid rgba(14,165,233,0.1)!important;border-radius:18px 18px 18px 4px!important;color:#1e293b!important;font-size:0.9rem!important;line-height:1.65!important;box-shadow:0 2px 14px rgba(0,0,0,0.07)!important;font-family:'DM Sans',sans-serif!important}
+[data-testid="stChatMessageContent"]{
+    background: rgba(20,25,40,0.6) !important;
+    backdrop-filter: blur(12px);
+    border:1px solid rgba(56,189,248,0.15) !important;
+    border-radius:16px;
+}
 .crisis-box{background:linear-gradient(135deg,rgba(254,226,226,0.95),rgba(255,237,213,0.9));border:1px solid rgba(220,38,38,0.2);border-radius:16px;padding:20px;margin:6px 0;font-size:0.88rem;line-height:1.7;box-shadow:0 4px 20px rgba(220,38,38,0.08)}
-div[data-testid="stSidebar"]{background:rgba(255,255,255,0.94)!important;border-right:1px solid rgba(14,165,233,0.1)!important;backdrop-filter:blur(20px)!important}
+div[data-testid="stSidebar"]{
+    background: linear-gradient(180deg, #0b1220, #06090f) !important;
+    border-right:1px solid rgba(56,189,248,0.1);
+}
 .sb-label{font-family:'Plus Jakarta Sans',sans-serif;font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px;margin-top:2px}
 .sb-ok{display:flex;align-items:center;gap:8px;background:linear-gradient(135deg,rgba(16,185,129,0.08),rgba(14,165,233,0.05));border:1px solid rgba(16,185,129,0.2);border-radius:12px;padding:10px 14px;font-size:0.82rem;color:#059669;font-weight:600;margin-bottom:4px}
 .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
@@ -288,7 +302,12 @@ div[data-testid="stSidebar"]{background:rgba(255,255,255,0.94)!important;border-
 .sc-lbl{font-size:9.5px;color:#94a3b8;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:2px}
 .sc-val{font-family:'Plus Jakarta Sans',sans-serif;font-size:1.25rem;font-weight:700;color:#0f172a}
 .stButton button{border-radius:12px!important;font-family:'DM Sans',sans-serif!important;font-size:0.85rem!important;font-weight:600!important;transition:all 0.2s!important}
-div[data-testid="stChatInput"] textarea{background:rgba(255,255,255,0.97)!important;border:1.5px solid rgba(14,165,233,0.2)!important;border-radius:16px!important;color:#1e293b!important;font-family:'DM Sans',sans-serif!important;font-size:0.9rem!important;box-shadow:0 4px 20px rgba(14,165,233,0.08)!important}
+div[data-testid="stChatInput"] textarea{
+    background:#0f172a !important;
+    color:#E6EDF3 !important;
+    border:1px solid rgba(56,189,248,0.2)!important;
+    border-radius:16px!important;
+}
 div[data-testid="stChatInput"] textarea:focus{border-color:rgba(14,165,233,0.4)!important;box-shadow:0 4px 24px rgba(14,165,233,0.15)!important}
 div[data-testid="stSidebar"] input{background:rgba(248,250,252,0.9)!important;border:1px solid rgba(14,165,233,0.15)!important;border-radius:10px!important;color:#1e293b!important;font-size:0.85rem!important}
 hr{border-color:rgba(14,165,233,0.1)!important}

@@ -1,9 +1,10 @@
 import streamlit as st
 
 st.set_page_config(
-    page_title="Lumina — AI Mental Health Companion",
-    page_icon="🌙",
-    layout="wide"
+    page_title="Home",
+    page_icon="🧠",
+    layout="wide",
+    initial_sidebar_state="collapsed"
 )
 
 st.markdown("""
@@ -17,9 +18,19 @@ st.markdown("""
     background: #080b12;
     color: #E6EAF2;   /* brighter text */
 }
-            p, span, div {
-    color: #E6EAF2 !important;
+          section[data-testid="stSidebarNav"] ul li:first-child {
+    display: none !important;
+}
+        /* FIXED TEXT SYSTEM */
+p {
+    color: #C9D4F1;
     font-size: 16px;
+    line-height: 1.7;
+}
+
+small {
+    color: #94A3B8 !important;
+}
 }
 
 small {
@@ -105,18 +116,28 @@ small {
     }
     .eyebrow-dot { width: 5px; height: 5px; border-radius: 50%; background: #38bdf8; animation: pulse-dot 2s infinite; }
 
-    .hero-h1 {
-        font-family: 'Sora', sans-serif;
-        font-size: clamp(2.8rem, 6vw, 5rem);
-        font-weight: 800; color: #ffffff;
-        line-height: 1.08; letter-spacing: -2.5px;
-        margin-bottom: 28px;
-    }
-    .hero-h1 .accent {
-        background: linear-gradient(120deg, #38bdf8 10%, #818cf8 50%, #a78bfa 90%);
-        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-        background-clip: text;
-    }
+   .hero-h1 {
+    font-family: 'Sora', sans-serif;
+    font-size: clamp(3.2rem, 6vw, 5.5rem);
+    font-weight: 800; 
+    color: #ffffff;
+    line-height: 1.15; 
+    letter-spacing: -1.8px;
+    margin-bottom: 28px;
+    text-align: center;
+}  /* ✅ THIS WAS MISSING */
+
+.hero-h1 span {
+    display: block;
+}
+
+.hero-h1 .accent {
+    background: linear-gradient(120deg, #38bdf8 10%, #818cf8 50%, #a78bfa 90%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+   
 
     .hero-p {
         font-size: 1.05rem; color: #a0aec0; line-height: 1.85;
