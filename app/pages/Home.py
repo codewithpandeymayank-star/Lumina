@@ -12,12 +12,20 @@ st.markdown("""
 
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
-    html, body, .stApp {
-        font-family: 'DM Sans', sans-serif;
-        background: #080b12;
-        color: #c8d0e0;
-        overflow-x: hidden;
-    }
+  html, body, .stApp {
+    font-family: 'DM Sans', sans-serif;
+    background: #080b12;
+    color: #E6EAF2;   /* brighter text */
+}
+            p, span, div {
+    color: #E6EAF2 !important;
+    font-size: 16px;
+}
+
+small {
+    color: #B8C1D1 !important;
+    font-size: 14px;
+}
 
     div[data-testid="stSidebar"] { display: none !important; }
     #MainMenu, header, footer { visibility: hidden; }
