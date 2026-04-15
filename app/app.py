@@ -431,11 +431,4 @@ st.markdown("""
 
 st.markdown("<br><br>", unsafe_allow_html=True)
 
-if st.button("🚀 Start Chatting"):
-    st.switch_page("pages/Chat.py")
-    st.switch_page("pages/Chat.py")
 
-    st.markdown("<br><br>", unsafe_allow_html=True)
-
-if st.button("🚀 Start Chatting"):
-    st.switch_page("pages/Chat.py")
