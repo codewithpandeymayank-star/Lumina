@@ -7,5 +7,3 @@ st.title("🧠 Lumina")
 
 st.write("Welcome to Lumina AI Emotion Chatbot")
 
-if st.button("Start Chat"):
-    st.switch_page("pages/Chat.py")
