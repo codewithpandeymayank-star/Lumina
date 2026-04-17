@@ -34,6 +34,10 @@ st.markdown("""
 
 .page {
     max-width: 1200px !important;
+    # display: flex;
+    # align-items: center;
+    # justify-content: center;
+
 }
             p, span, div {
     color: #E6EAF2 !important;
@@ -140,12 +144,34 @@ small {
         font-size: clamp(2.8rem, 6vw, 5rem);
         font-weight: 800; color: #ffffff;
         line-height: 1.08; letter-spacing: -2.5px;
-        margin-bottom: 28px;
+        margin-bottom: -10px;
+        align-items: center; display: flex; justify-content: center;
     }
     .hero-h1 .accent {
         background: linear-gradient(120deg, #38bdf8 10%, #818cf8 50%, #a78bfa 90%);
         -webkit-background-clip: text; -webkit-text-fill-color: transparent;
         background-clip: text;
+        align-self: center;
+    }
+            
+    .hero-h2 {
+        font-family: 'Sora', sans-serif;
+        font-size: clamp(1.5rem, 6vw, 3rem);
+        font-weight: 800; color: #ffffff;
+        line-height: 1.08; letter-spacing: -2.5px;
+        padding: 0 4px;
+        margin-bottom: 28px;
+        align-items: center; display: flex; justify-content: center;
+    }
+
+    .hero-h2 .accent {
+        background: linear-gradient(120deg, #38bdf8 10%, #818cf8 50%, #a78bfa 90%);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        background-clip: text;
+        letter-spacing: 0.5px;
+        padding: 2px 2px;
+        line-height: 2;
+        align-self: center;
     }
 
     .hero-p {
@@ -306,8 +332,11 @@ small {
 <div class="hero">
     <div class="eyebrow"><div class="eyebrow-dot"></div> Emotion-Aware AI</div>
     <h1 class="hero-h1">
-    Your mind deserves <span class="accent">to be understood</span>
+    Your mind 
     </h1>
+    <h2 class="hero-h2">        
+        <span class="accent"> deserves to be understood</span>
+    </h2>
     <p class="hero-p">
         Lumina listens deeply, reads your emotional state in real-time,
         and responds with genuine human empathy — powered by AI trained
@@ -430,5 +459,3 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 st.markdown("<br><br>", unsafe_allow_html=True)
-
-
