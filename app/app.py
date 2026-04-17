@@ -34,9 +34,9 @@ st.markdown("""
 
 .page {
     max-width: 1200px !important;
-    # display: flex;
-    # align-items: center;
-    # justify-content: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 
 }
             p, span, div {
