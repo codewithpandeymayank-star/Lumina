@@ -141,7 +141,7 @@ small {
 
     .hero-h1 {
         font-family: 'Sora', sans-serif;
-        font-size: clamp(1.5rem, 6vw, 3rem);
+        font-size: clamp2.8rem, 6vw, 5rem);
         font-weight: 800; color: #ffffff;
         line-height: 1.08; letter-spacing: -2.5px;
         margin-bottom: -10px;
