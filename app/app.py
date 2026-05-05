@@ -34,9 +34,9 @@ st.markdown("""
 
 .page {
     max-width: 1200px !important;
-    # display: flex;
-    # align-items: center;
-    # justify-content: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 
 }
             p, span, div {
@@ -141,11 +141,11 @@ small {
 
     .hero-h1 {
         font-family: 'Sora', sans-serif;
-        font-size: clamp(1.5rem, 6vw, 3rem);
+        font-size: clamp2.8rem, 6vw, 5rem);
         font-weight: 800; color: #ffffff;
-        line-height: 1.08; letter-spacing: -2.5px;
+        line-height: 1.08; letter-spacing: 2px;
         margin-bottom: -10px;
-        align-items: center; display: flex; justify-content: center;
+        # align-items: center; display: flex; justify-content: center;
     }
     .hero-h1 .accent {
         background: linear-gradient(120deg, #38bdf8 10%, #818cf8 50%, #a78bfa 90%);
