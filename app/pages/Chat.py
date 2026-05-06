@@ -262,6 +262,11 @@ st.set_page_config(page_title="Lumina · Chat", page_icon="🌙", layout="center
 
 st.markdown("""
 <style>
+[data-testid="stAppViewContainer"]{background:#06090f!important}
+[data-testid="stMain"]{background:#06090f!important}
+[data-testid="stMainBlockContainer"]{background:#06090f!important}
+[data-testid="stVerticalBlock"]{background:#06090f!important}
+section[data-testid="stMain"]>div{background:#06090f!important}
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=DM+Sans:wght@300;400;500&display=swap');
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 html,body,.stApp{font-family:'DM Sans',sans-serif;background:#f8fafc;color:#1e293b}
